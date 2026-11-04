@@ -1,0 +1,65 @@
+
+# =========================
+# EXISTING PROJECT RULES
+# =========================
+referencias/
+prompt_para_code.txt
+node_modules/
+
+# =========================
+# ENVIRONMENT VARIABLES
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# =========================
+# DJANGO
+# =========================
+*.log
+db.sqlite3
+media/
+staticfiles/
+
+# =========================
+# IDE / EDITORS
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OPERATING SYSTEM
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# DATOS DE CLIENTES
+# =========================
+# Migración: informes y correcciones pueden tener datos personales o de clientes
+backend/migracion/informes/
+backend/migracion/correcciones*.yaml
+# Lectura de hojas: lecturas simuladas (las fotos ya quedan fuera por media/)
+backend/lectura/simulado/
+
+# =========================
+# DOCUMENTOS LOCALES (no van a GitHub)
+# =========================
+CONTEXTO_PROYECTO.md
+CONTEXTO_SESION.md
+PLAN_MIGRACION.md
+Cronograma_Proyecto2.xlsx
+# Copias comprimidas de las referencias: datos de clientes
+referencias*.zip
