@@ -1,0 +1,50 @@
+{
+  "_nota": [
+    "Departamentos de la empresa y los roles de cada uno. Se carga con:",
+    "    python manage.py cargar_roles nucleo/roles_departamentos.json",
+    "",
+    "ESTA LISTA ESTA VACIA A PROPOSITO: falta la lista real de departamentos y roles.",
+    "No se inventaron departamentos ni permisos. Abajo queda un ejemplo comentado con la",
+    "forma que debe tener cada entrada; al llenarla, borrar la llave _ejemplo.",
+    "",
+    "Campos de un rol:",
+    "  codigo      - nombre corto dentro del departamento (jefe, tecnico, asistente).",
+    "  nombre      - como lo llama la empresa.",
+    "  descripcion - opcional, que hace.",
+    "  es_jefatura - true si ese rol aprueba o autoriza.",
+    "  es_supuesto - true mientras la empresa no lo confirme (asi queda marcado).",
+    "  permisos    - permisos de Django, en formato app.codename. Se pueden dejar vacios",
+    "                al principio y asignarlos despues; el comando avisa si alguno no existe.",
+    "",
+    "Permisos disponibles: salen de los modelos. Para verlos todos:",
+    "    python manage.py shell -c \"from django.contrib.auth.models import Permission; print('\\n'.join(f'{p.content_type.app_label}.{p.codename}' for p in Permission.objects.order_by('content_type__app_label','codename')))\"",
+    "",
+    "Nota: los cinco roles del laboratorio que leen los triggers de PostgreSQL",
+    "(administrador, recepcion, tecnico, supervisor, consulta) son aparte, en",
+    "lab.usuarios_roles, y se asignan con el modelo lab.UsuarioRol."
+  ],
+
+  "_ejemplo": {
+    "nombre": "Laboratorio",
+    "descripcion": "Ensayos a materiales y geotecnia",
+    "roles": [
+      {
+        "codigo": "jefe",
+        "nombre": "Jefe de laboratorio",
+        "descripcion": "Revisa y aprueba resultados",
+        "es_jefatura": true,
+        "es_supuesto": true,
+        "permisos": ["lab.view_ensayo", "lab.change_ensayo"]
+      },
+      {
+        "codigo": "tecnico",
+        "nombre": "Técnico de laboratorio",
+        "es_jefatura": false,
+        "es_supuesto": true,
+        "permisos": ["lab.view_ensayo", "lab.add_ensayo"]
+      }
+    ]
+  },
+
+  "departamentos": []
+}

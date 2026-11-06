@@ -9,6 +9,7 @@ Los valores sensibles (clave secreta, cadenas de conexión) se leen de
 variables de entorno, que tienen prioridad.
 """
 
+import os
 from pathlib import Path
 
 import dj_database_url
@@ -30,7 +31,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.postgres"
+    "django.contrib.postgres",
+    # Apps del proyecto
+    "nucleo",
+    "rrhh",
+    "finanzas",
+    "migracion",
+    "lectura",
+    "lab",
 ]
 
 MIDDLEWARE = [
@@ -39,6 +47,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Le dice a PostgreSQL quién trabaja (variable lab.usuario_id) para los triggers del
+    # esquema lab: aprobación solo por supervisor, protección de lo aprobado y auditoría.
+    # Va después del de autenticación porque necesita request.user.
+    "lab.middleware.UsuarioLabMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -123,6 +135,41 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ---------------------------------------------------------------------------
+# Archivos del LIMS (app `lab`): Cloudinary
+# ---------------------------------------------------------------------------
+# Decisión del equipo (nov-2026): los archivos del laboratorio (certificados de calibración,
+# hojas de remisión firmadas, CSV de la prensa, informes en PDF y adjuntos) van a Cloudinary.
+# Es un almacenamiento aparte del por defecto, porque el por defecto lo ocupa la app `lectura`,
+# cuyas fotos son datos de clientes y se guardan fuera del repositorio sin publicarse.
+# Las credenciales se leen de CLOUDINARY_URL (backend/.env), con el formato que da Cloudinary:
+#   cloudinary://<api_key>:<api_secret>@<cloud_name>
+CLOUDINARY_URL = config("CLOUDINARY_URL", default="")
+
+# La biblioteca de Cloudinary lee la cuenta de la variable de entorno CLOUDINARY_URL, así que
+# se copia ahí lo que venga de backend/.env (las variables de entorno reales tienen prioridad).
+if CLOUDINARY_URL:
+    os.environ.setdefault("CLOUDINARY_URL", CLOUDINARY_URL)
+    # SUPUESTO: carpeta raíz dentro de Cloudinary, para no mezclar con otros sistemas de la
+    # empresa. Las subcarpetas las pone cada campo (lab/calibraciones/, lab/informes/...).
+    CLOUDINARY_STORAGE = {"PREFIX": config("CLOUDINARY_PREFIX", default="")}
+    ALMACENAMIENTO_LAB = {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"}
+else:
+    # Todavía sin credenciales de Cloudinary: los archivos del laboratorio van al disco, en
+    # backend/media/lab/, para poder trabajar y correr pruebas. En cuanto la empresa dé la
+    # cuenta, se pone CLOUDINARY_URL en backend/.env y empiezan a subir a Cloudinary sin
+    # tocar el código. PENDIENTE: pedir la cuenta (ver PENDIENTES.md).
+    ALMACENAMIENTO_LAB = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+
+STORAGES = {
+    # Por defecto: disco, para la app `lectura` (ver MEDIA_ROOT más abajo).
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    # Archivos del laboratorio. Los campos de lab/models.py lo piden por este nombre
+    # (ver lab/storages.py).
+    "lab_archivos": ALMACENAMIENTO_LAB,
+}
 
 # ---------------------------------------------------------------------------
 # Lectura de hojas (app `lectura`)
